@@ -18,7 +18,7 @@ func commandDelete(state *state, args []string) error {
 
 	idString := strings.TrimSpace(args[0])
 	if idString == "" {
-		return ErrEmptyID
+		return ErrEmptyArgs
 	}
 
 	id, err := strconv.Atoi(idString)

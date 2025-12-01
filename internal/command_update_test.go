@@ -11,7 +11,6 @@ import (
 )
 
 func TestCommandUpdate(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
 
 	testState := state{Tasks: []Task{
 		{ID: 1, Description: "Old Task", CreatedAt: time.Now()},
@@ -43,8 +42,8 @@ func TestCommandUpdate(t *testing.T) {
 		}{
 			{"missing args", []string{"1"}, ErrMissingArg},
 			{"too many args", []string{"1", "desc", "extra"}, ErrTooManyArgs},
-			{"empty ID", []string{"   ", "desc"}, ErrEmptyID},
-			{"empty description", []string{"1", "   "}, ErrEmptyDescription},
+			{"empty ID", []string{"   ", "desc"}, ErrEmptyArgs},
+			{"empty description", []string{"1", "   "}, ErrEmptyArgs},
 			{"non-existent task", []string{"99", "desc"}, ErrTaskNotFound},
 			{"invalid ID", []string{"abc", "desc"}, strconv.ErrSyntax}, // strconv.Atoi error
 		}
@@ -65,7 +64,6 @@ func TestCommandUpdate(t *testing.T) {
 }
 
 func TestCommandUpdateStdout(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()

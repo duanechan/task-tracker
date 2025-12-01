@@ -17,7 +17,7 @@ func commandAdd(state *state, args []string) error {
 
 	description := strings.TrimSpace(args[0])
 	if description == "" {
-		return ErrEmptyDescription
+		return ErrEmptyArgs
 	}
 
 	state.NextID++

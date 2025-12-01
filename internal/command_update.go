@@ -18,7 +18,7 @@ func commandUpdate(state *state, args []string) error {
 
 	idString, updatedDescription := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
 	if idString == "" {
-		return ErrEmptyID
+		return ErrEmptyArgs
 	}
 
 	id, err := strconv.Atoi(idString)
@@ -27,7 +27,7 @@ func commandUpdate(state *state, args []string) error {
 	}
 
 	if updatedDescription == "" {
-		return ErrEmptyDescription
+		return ErrEmptyArgs
 	}
 
 	updated := false

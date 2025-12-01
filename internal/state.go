@@ -2,7 +2,9 @@ package task
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,24 +26,54 @@ func readState() (*state, error) {
 	path := filepath.Join(cwd, filename)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := saveState(&state{NextID: 0, Tasks: []Task{}}); err != nil {
+		s := state{NextID: 0, Tasks: []Task{}}
+		if err := saveState(&s); err != nil {
 			return nil, err
 		}
+		return &s, nil
 	}
 
-	file, err := os.OpenFile(path, os.O_RDONLY, 06444)
+	file, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var state state
-	if err = json.NewDecoder(file).Decode(&state); err != nil {
-		return nil, err
+	var s state
+	err = json.NewDecoder(file).Decode(&s)
+	if err == nil {
+		return &s, nil
 	}
 
-	return &state, nil
+	if err == io.EOF {
+		newState := state{NextID: 0, Tasks: []Task{}}
+		if err := saveState(&newState); err != nil {
+			return nil, err
+		}
+		return &newState, nil
+	}
+
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		newState := state{NextID: 0, Tasks: []Task{}}
+		if err := saveState(&newState); err != nil {
+			return nil, err
+		}
+		return &newState, nil
+	}
+
+	var typeErr *json.UnmarshalTypeError
+	if errors.As(err, &typeErr) {
+		newState := state{NextID: 0, Tasks: []Task{}}
+		if err := saveState(&newState); err != nil {
+			return nil, err
+		}
+		return &newState, nil
+	}
+
+	return nil, err
 }
+
 
 // Writes the given application state to the JSON file.
 func saveState(state *state) error {
@@ -58,10 +90,12 @@ func saveState(state *state) error {
 
 func (s state) displayTasks(pred func(t Task) bool) {
 	sb := strings.Builder{}
-	
-	for i, t := range s.Tasks {
+	idx := 1
+
+	for _, t := range s.Tasks {
 		if pred(t) {
-			sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, t))
+			sb.WriteString(fmt.Sprintf("%d. %s\n", idx, t))
+			idx++
 		}
 	}
 	

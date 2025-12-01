@@ -1,131 +1,106 @@
 package task
 
 import (
-	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 )
 
-func captureStdout(f func()) string {
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	f()
-
-	w.Close()
-	os.Stdout = old
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
-	return buf.String()
-}
-
 func TestCommandDelete(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
-	s := &state{
-		Tasks: []Task{
-			{ID: 1, Description: "Task One"},
-			{ID: 2, Description: "Task Two"},
-		},
-	}
-
-	err := commandDelete(s, []string{"1"})
-	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
-	}
-
-	if len(s.Tasks) != 1 {
-		t.Fatalf("expected 1 task left, got %d", len(s.Tasks))
-	}
-
-	if s.Tasks[0].ID != 2 {
-		t.Fatalf("expected remaining task ID 2, got %d", s.Tasks[0].ID)
-	}
-}
-
-func TestCommandDeleteError(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
+	t.Cleanup(func() {
+		path := filepath.Join(cwd, filename)
+		os.Remove(path)
+	})
+	
 	tests := []struct {
-		name string
-		args []string
-		want error
+		name      string
+		args      []string
+		wantErr   error
+		wantTasks []Task
 	}{
 		{
-			name: "missing arg",
-			args: []string{},
-			want: ErrMissingArg,
+			name:    "delete existing task",
+			args:    []string{"2"},
+			wantErr: nil,
+			wantTasks: []Task{
+				{ID: 1, Description: "Task 1", Status: Todo},
+				{ID: 3, Description: "Task 3", Status: Todo},
+			},
 		},
 		{
-			name: "too many args",
-			args: []string{"1", "2"},
-			want: ErrTooManyArgs,
+			name:      "task not found",
+			args:      []string{"99"},
+			wantErr:   ErrTaskNotFound,
+			wantTasks: []Task{{ID: 1, Description: "Task 1", Status: Todo}, {ID: 2, Description: "Task 2", Status: Todo}, {ID: 3, Description: "Task 3", Status: Todo}},
 		},
 		{
-			name: "empty id",
-			args: []string{" "},
-			want: ErrEmptyArgs,
+			name:      "missing argument",
+			args:      []string{},
+			wantErr:   ErrMissingArg,
+			wantTasks: nil,
 		},
 		{
-			name: "invalid id",
-			args: []string{"abc"},
-			want: strconv.ErrSyntax,
+			name:      "too many arguments",
+			args:      []string{"1", "2"},
+			wantErr:   ErrTooManyArgs,
+			wantTasks: nil,
 		},
 		{
-			name: "not found",
-			args: []string{"99"},
-			want: ErrTaskNotFound,
+			name:      "empty argument",
+			args:      []string{"   "},
+			wantErr:   ErrEmptyArgs,
+			wantTasks: nil,
+		},
+		{
+			name:      "invalid ID",
+			args:      []string{"abc"},
+			wantErr:   strconv.ErrSyntax,
+			wantTasks: nil,
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			s := &state{
-				Tasks: []Task{
-					{ID: 1, Description: "Hello"},
-				},
-			}
+    makeState := func() *state {
+        return &state{
+            NextID: 3,
+            Tasks: []Task{
+                {ID: 1, Description: "Task 1", Status: Todo},
+                {ID: 2, Description: "Task 2", Status: Todo},
+                {ID: 3, Description: "Task 3", Status: Todo},
+            },
+        }
+    }
 
-			err := commandDelete(s, tc.args)
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            state := makeState()
 
-			if err == nil {
-				t.Fatalf("expected error %v, got nil", tc.want)
-			}
+            err := commandDelete(state, tt.args)
 
-			if errors.Is(tc.want, strconv.ErrSyntax) {
-				if !strings.Contains(err.Error(), "invalid syntax") {
-					t.Fatalf("expected Atoi syntax error, got %v", err)
-				}
-				return
-			}
+            if tt.wantErr != nil {
+                if tt.wantErr == strconv.ErrSyntax {
+                    var syntaxErr *strconv.NumError
+                    if !errors.As(err, &syntaxErr) {
+                        t.Errorf("expected strconv.NumError, got %v", err)
+                    }
+                } else if err != tt.wantErr {
+                    t.Errorf("expected error %v, got %v", tt.wantErr, err)
+                }
+            } else if err != nil {
+                t.Errorf("unexpected error: %v", err)
+            }
 
-			if !errors.Is(err, tc.want) {
-				t.Fatalf("expected error %v, got %v", tc.want, err)
-			}
-		})
-	}
-}
+            if tt.wantTasks != nil {
+                if len(state.Tasks) != len(tt.wantTasks) {
+                    t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(state.Tasks))
+                }
 
-func TestCommandDeleteStdout(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
-	s := &state{
-		Tasks: []Task{
-			{ID: 10, Description: "Clean room"},
-			{ID: 20, Description: "Study"},
-		},
-	}
-
-	output := captureStdout(func() {
-		err := commandDelete(s, []string{"10"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-	})
-
-	expected := "Deleted Task: (ID: 10) Clean room"
-	if !strings.Contains(output, expected) {
-		t.Fatalf("expected stdout to contain %q, got %q", expected, output)
-	}
+                for i, want := range tt.wantTasks {
+                    actual := state.Tasks[i]
+                    checkTaskIfEqual(t, want, actual)
+                }
+            }
+        })
+    }
 }

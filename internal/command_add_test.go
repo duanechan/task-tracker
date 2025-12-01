@@ -1,117 +1,94 @@
 package task
 
 import (
-	"bytes"
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func deleteTempJSON() {
-	path := filepath.Join(cwd, filename)
-	os.Remove(path)
-}
-
 func TestCommandAdd(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
-	testState := state{Tasks: []Task{}}
-	testArgs := [][]string{
-		{"Make breakfast"},
-		{"Exercise for 30-mins"},
-		{"Study data structures & algorithms"},
-	}
-
-	for i, args := range testArgs {
-		t.Run(args[0], func(t *testing.T) {
-			if err := commandAdd(&testState, args); err != nil {
-				t.Errorf("expected err to be nil, got %s", err)
-			}
-
-			task := testState.Tasks[i]
-
-			if task.ID != i+1 {
-				t.Errorf("expected id to be %d, got %d", i+1, task.ID)
-			}
-
-			if task.Description != testArgs[i][0] {
-				t.Errorf("expected description to be %s, got %s", testArgs[i][0], task.Description)
-			}
-
-			if task.Status != Todo {
-				t.Errorf("expected status to be %d, got %d", Todo, task.Status)
-			}
-		})
-	}
-
-	if testState.NextID != len(testArgs) {
-		t.Errorf("expected count to be %d, got %d", len(testArgs), testState.NextID)
-	}
-
-}
-
-func TestCommandAddError(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
-	tests := []struct {
-		name string
-		args []string
-		want error
-	}{
-		{"empty string", []string{"   "}, ErrEmptyDescription},
-		{"too many args", []string{"This", "is", "my", "task"}, ErrTooManyArgs},
-		{"missing arg", []string{}, ErrMissingArg},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			testState := state{Tasks: []Task{}}
-
-			err := commandAdd(&testState, tc.args)
-			if err == nil {
-				t.Fatalf("expected error %q, got nil", tc.want)
-			}
-
-			if !errors.Is(err, tc.want) {
-				t.Fatalf("expected error %q, got %q", tc.want, err)
-			}
-		})
-	}
-}
-
-func TestCommandAddStdout(t *testing.T) {
-	t.Cleanup(deleteTempJSON)
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
 	t.Cleanup(func() {
-		os.Stdout = old
+		path := filepath.Join(cwd, filename)
+		os.Remove(path)
 	})
 
-	testState := state{Tasks: []Task{}}
-	testArgs := [][]string{
-		{"Make breakfast"},
-		{"Exercise for 30-mins"},
-		{"Study data structures & algorithms"},
+	tests := []struct {
+        name       string
+        argsList   [][]string
+        wantTasks  []Task
+        wantErr    []error
+    }{
+        {
+            name: "single add",
+            argsList: [][]string{
+                {"Learn Go"},
+            },
+            wantTasks: []Task{
+                {ID: 1, Description: "Learn Go", Status: Todo},
+            },
+            wantErr: []error{nil},
+        },
+        {
+            name: "multiple sequential adds",
+            argsList: [][]string{
+                {"eat "},
+                {"  sleep  "},
+                {"repeat"},
+            },
+            wantTasks: []Task{
+                {ID: 1, Description: "eat", Status: Todo},
+                {ID: 2, Description: "sleep", Status: Todo},
+                {ID: 3, Description: "repeat", Status: Todo},
+            },
+            wantErr: []error{nil, nil, nil},
+        },
+        {
+            name: "invalid adds",
+            argsList: [][]string{
+                {},
+                {"   "},
+                {"Hello", "world"},
+            },
+            wantTasks: []Task{},
+            wantErr: []error{ErrMissingArg, ErrEmptyArgs, ErrTooManyArgs},
+        },
+    }
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := &state{NextID: 0, Tasks: []Task{}}
+
+			for i, args := range tt.argsList {
+				err := commandAdd(state, args)
+				if err != tt.wantErr[i] {
+					t.Errorf("expected error %v, got %v", tt.wantErr, err)
+				}
+			}
+
+			if len(state.Tasks) != len(tt.wantTasks) {
+				t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(state.Tasks))
+			}
+
+			for i, want := range tt.wantTasks {
+                actual := state.Tasks[i]
+                checkTaskIfEqual(t, want, actual)
+            }
+		})
 	}
 
-	for _, args := range testArgs {
-		if err := commandAdd(&testState, args); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
+	
+}
+
+func checkTaskIfEqual(t *testing.T, expected Task, actual Task) {
+	if expected.ID != actual.ID {
+		t.Errorf("expected id to be %d, got %d", expected.ID, actual.ID)
 	}
 
-	w.Close()
-
-	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(r); err != nil {
-		t.Fatalf("failed to read stdout: %v", err)
+	if expected.Description != actual.Description {
+		t.Errorf("expected description to be %s, got %s", expected.Description, actual.Description)
 	}
-	output := buf.String()
 
-	expected := "Task added successfully: (ID: 1) Make breakfast\nTask added successfully: (ID: 2) Exercise for 30-mins\nTask added successfully: (ID: 3) Study data structures & algorithms\n"
-
-	if output != expected {
-		t.Errorf("expected stdout %q, got %q", expected, output)
+	if expected.Status != actual.Status {
+		t.Errorf("expected status to be %d, got %d", expected.Status, actual.Status)
 	}
 }

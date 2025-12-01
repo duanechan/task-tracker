@@ -20,14 +20,13 @@ type CLI struct {
 }
 
 var (
-	ErrTaskNotFound 	= errors.New("task not found")
-	ErrInvalidArg       = errors.New("invalid argument")
-	ErrEmptyArgs        = errors.New("argument/s must be non-empty")
-	ErrEmptyID          = errors.New("task id is required")
-	ErrEmptyDescription = errors.New("task description is required")
-	ErrTooManyArgs      = errors.New("too many arguments")
-	ErrMissingArg       = errors.New("not enough arguments")
+    ErrTaskNotFound = errors.New("task not found")
+    ErrInvalidArg       = errors.New("invalid argument")
+    ErrEmptyArgs        = errors.New("argument must be non-empty")
+    ErrTooManyArgs      = errors.New("too many arguments")
+    ErrMissingArg       = errors.New("not enough arguments")
 )
+
 
 // Load application state or return an error.
 func LoadCLI() (*CLI, error) {
