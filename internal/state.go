@@ -2,8 +2,10 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // State object of the Task Tracker CLI.
@@ -54,10 +56,18 @@ func saveState(state *state) error {
 	return json.NewEncoder(file).Encode(state)
 }
 
-// Truncates the JSON file to an empty state.
-// func resetState() {
-// 	new := &state{NextID: 0, Tasks: []Task{}}
-// 	saveState(new)
-// }
+func (s state) displayTasks(pred func(t Task) bool) {
+	sb := strings.Builder{}
+	
+	for i, t := range s.Tasks {
+		if pred(t) {
+			sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, t))
+		}
+	}
+	
+	if sb.String() == "" {
+		sb.WriteString("No tasks to display.")
+	}
 
-
+	fmt.Println(sb.String())
+}

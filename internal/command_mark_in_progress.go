@@ -8,7 +8,7 @@ import (
 )
 
 func commandMarkInProgress(state *state, args []string) error {
-		if len(args) < 1 {
+	if len(args) < 1 {
 		return ErrMissingArg
 	}
 
