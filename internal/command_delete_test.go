@@ -24,6 +24,7 @@ func captureStdout(f func()) string {
 }
 
 func TestCommandDelete(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	s := &state{
 		Tasks: []Task{
 			{ID: 1, Description: "Task One"},
@@ -46,6 +47,7 @@ func TestCommandDelete(t *testing.T) {
 }
 
 func TestCommandDeleteError(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	tests := []struct {
 		name string
 		args []string
@@ -107,6 +109,7 @@ func TestCommandDeleteError(t *testing.T) {
 }
 
 func TestCommandDeleteStdout(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	s := &state{
 		Tasks: []Task{
 			{ID: 10, Description: "Clean room"},
@@ -121,7 +124,7 @@ func TestCommandDeleteStdout(t *testing.T) {
 		}
 	})
 
-	expected := "Deleted Task (ID: 10) Clean room"
+	expected := "Deleted Task: (ID: 10) Clean room"
 	if !strings.Contains(output, expected) {
 		t.Fatalf("expected stdout to contain %q, got %q", expected, output)
 	}

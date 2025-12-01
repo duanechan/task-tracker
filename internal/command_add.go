@@ -30,7 +30,7 @@ func commandAdd(state *state, args []string) error {
 	}
 	state.Tasks = append(state.Tasks, task)
 
-	fmt.Printf("Task added successfully (ID: %d)\n", state.NextID)
+	fmt.Printf("Task added successfully: %s\n", task)
 
 	return saveState(state)
 }

@@ -29,7 +29,7 @@ func commandDelete(state *state, args []string) error {
 	deleted := false
 	state.Tasks = slices.DeleteFunc(state.Tasks, func(t Task) bool {
 		if t.ID == id {
-			fmt.Printf("Deleted Task (ID: %d) %s\n", t.ID, t.Description)
+			fmt.Printf("Deleted Task: %s\n", t)
 			deleted = true
 			return true
 		}

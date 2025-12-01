@@ -4,10 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
+func deleteTempJSON() {
+	path := filepath.Join(cwd, filename)
+	os.Remove(path)
+}
+
 func TestCommandAdd(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	testState := state{Tasks: []Task{}}
 	testArgs := [][]string{
 		{"Make breakfast"},
@@ -44,6 +51,7 @@ func TestCommandAdd(t *testing.T) {
 }
 
 func TestCommandAddError(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	tests := []struct {
 		name string
 		args []string
@@ -71,6 +79,7 @@ func TestCommandAddError(t *testing.T) {
 }
 
 func TestCommandAddStdout(t *testing.T) {
+	t.Cleanup(deleteTempJSON)
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
@@ -100,7 +109,7 @@ func TestCommandAddStdout(t *testing.T) {
 	}
 	output := buf.String()
 
-	expected := "Task added successfully (ID: 1)\nTask added successfully (ID: 2)\nTask added successfully (ID: 3)\n"
+	expected := "Task added successfully: (ID: 1) Make breakfast\nTask added successfully: (ID: 2) Exercise for 30-mins\nTask added successfully: (ID: 3) Study data structures & algorithms\n"
 
 	if output != expected {
 		t.Errorf("expected stdout %q, got %q", expected, output)

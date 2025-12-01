@@ -21,6 +21,10 @@ type Task struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
+func (t Task) String() string {
+	return fmt.Sprintf("(ID: %d) %s", t.ID, t.Description)
+}
+
 func (t Task) Details() {
 	fmt.Println("Task ID:", t.ID)
 	fmt.Println("--------------------")
