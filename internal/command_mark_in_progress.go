@@ -2,13 +2,13 @@ package task
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
-func commandDelete(state *state, args []string) error {
-	if len(args) < 1 {
+func commandMarkInProgress(state *state, args []string) error {
+		if len(args) < 1 {
 		return ErrMissingArg
 	}
 
@@ -26,19 +26,20 @@ func commandDelete(state *state, args []string) error {
 		return err
 	}
 
-	deleted := false
-	state.Tasks = slices.DeleteFunc(state.Tasks, func(t Task) bool {
+	marked := false
+	for i, t := range state.Tasks {
 		if t.ID == id {
-			fmt.Printf("Deleted Task: %s\n", t)
-			deleted = true
-			return true
-		}
-		return false
-	})
-
-	if !deleted {
-		return ErrTaskNotFound
+			fmt.Printf("Task %s status updated to: %s\n", t, "In Progress")
+			state.Tasks[i].Status = InProgress
+			state.Tasks[i].UpdatedAt = time.Now()
+			marked = true
+			break
+		} 
 	}
 
+	if !marked {
+		return ErrTaskNotFound
+	}
+	
 	return saveState(state)
 }
