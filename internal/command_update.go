@@ -33,7 +33,7 @@ func commandUpdate(c *CLI, args []string) error {
 	updated := false
 	for i, t := range c.state.Tasks {
 		if t.ID == id {
-			fmt.Printf("Updated Task (ID: %d) description to %s\n", t.ID, updatedDescription)
+			fmt.Printf("Updated Task (ID: %d) description to \"%s\"\n", t.ID, updatedDescription)
 			c.state.Tasks[i].Description = updatedDescription
 			c.state.Tasks[i].UpdatedAt = time.Now()
 			updated = true
