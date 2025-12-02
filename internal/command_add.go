@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func commandAdd(state *state, args []string) error {
+func commandAdd(c *CLI, args []string) error {
 	if len(args) < 1 {
 		return ErrMissingArg
 	}
@@ -20,17 +20,17 @@ func commandAdd(state *state, args []string) error {
 		return ErrEmptyArgs
 	}
 
-	state.NextID++
+	c.state.NextID++
 	task := Task{
-		ID:          state.NextID,
+		ID:          c.state.NextID,
 		Description: description,
 		Status:      Todo,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-	}
-	state.Tasks = append(state.Tasks, task)
+	}                
+	c.state.Tasks = append(c.state.Tasks, task)
 
 	fmt.Printf("Task added successfully: %s\n", task)
 
-	return saveState(state)
+	return saveState(c.state)
 }

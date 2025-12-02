@@ -56,21 +56,21 @@ func TestCommandAdd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			state := &state{NextID: 0, Tasks: []Task{}}
+			c := &CLI{state: &state{NextID: 0, Tasks: []Task{}}}
 
 			for i, args := range tt.argsList {
-				err := commandAdd(state, args)
+				err := commandAdd(c, args)
 				if err != tt.wantErr[i] {
 					t.Errorf("expected error %v, got %v", tt.wantErr, err)
 				}
 			}
 
-			if len(state.Tasks) != len(tt.wantTasks) {
-				t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(state.Tasks))
+			if len(c.state.Tasks) != len(tt.wantTasks) {
+				t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(c.state.Tasks))
 			}
 
 			for i, want := range tt.wantTasks {
-				actual := state.Tasks[i]
+				actual := c.state.Tasks[i]
 				checkTaskIfEqual(t, want, actual)
 			}
 		})

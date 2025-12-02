@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func commandUpdate(state *state, args []string) error {
+func commandUpdate(c *CLI, args []string) error {
 	if len(args) < 2 {
 		return ErrMissingArg
 	}
@@ -31,19 +31,19 @@ func commandUpdate(state *state, args []string) error {
 	}
 
 	updated := false
-	for i, t := range state.Tasks {
+	for i, t := range c.state.Tasks {
 		if t.ID == id {
 			fmt.Printf("Updated Task (ID: %d) description to %s\n", t.ID, updatedDescription)
-			state.Tasks[i].Description = updatedDescription
-			state.Tasks[i].UpdatedAt = time.Now()
+			c.state.Tasks[i].Description = updatedDescription
+			c.state.Tasks[i].UpdatedAt = time.Now()
 			updated = true
 			break
 		}
 	}
 
 	if !updated {
-		return ErrTaskNotFound
+		return ErrTaskNotFound  
 	}
 
-	return saveState(state)
+	return saveState(c.state)
 }

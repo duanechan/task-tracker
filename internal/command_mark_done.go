@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func commandMarkDone(state *state, args []string) error {
+func commandMarkDone(c *CLI, args []string) error {
 	if len(args) < 1 {
 		return ErrMissingArg
 	}
@@ -27,15 +27,15 @@ func commandMarkDone(state *state, args []string) error {
 	}
 
 	marked := false
-	for i, t := range state.Tasks {
+	for i, t := range c.state.Tasks {
 		if t.ID == id {
 			if t.Status == Done {
 				fmt.Println("This task is already marked as done.")
 				return nil
 			}
 			fmt.Printf("Task %s status updated to: %s\n", t, "Done")
-			state.Tasks[i].Status = Done
-			state.Tasks[i].UpdatedAt = time.Now()
+			c.state.Tasks[i].Status = Done
+			c.state.Tasks[i].UpdatedAt = time.Now()
 			marked = true
 			break
 		}
@@ -45,5 +45,5 @@ func commandMarkDone(state *state, args []string) error {
 		return ErrTaskNotFound
 	}
 
-	return saveState(state)
+	return saveState(c.state)
 }

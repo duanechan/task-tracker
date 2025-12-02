@@ -31,14 +31,16 @@ func TestCommandMarkDone(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			now := time.Now()
-			state := &state{
-				Tasks: []Task{
-					{ID: 1, Description: "Task 1", Status: Todo, UpdatedAt: now},
-					{ID: 2, Description: "Task 2", Status: InProgress, UpdatedAt: now},
+			c := &CLI{
+				state: &state{
+					Tasks: []Task{
+						{ID: 1, Description: "Task 1", Status: Todo, UpdatedAt: now},
+						{ID: 2, Description: "Task 2", Status: InProgress, UpdatedAt: now},
+					},
 				},
 			}
 
-			err := commandMarkDone(state, tt.args)
+			err := commandMarkDone(c, tt.args)
 
 			if tt.wantErr != nil {
 				if tt.wantErr == strconv.ErrSyntax {
@@ -54,7 +56,7 @@ func TestCommandMarkDone(t *testing.T) {
 			}
 
 			for id, status := range tt.wantStatus {
-				for _, task := range state.Tasks {
+				for _, task := range c.state.Tasks {
 					if task.ID == id && task.Status != status {
 						t.Errorf("task ID %d: expected status %v, got %v", id, status, task.Status)
 					}

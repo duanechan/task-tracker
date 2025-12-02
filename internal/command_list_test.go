@@ -9,11 +9,13 @@ import (
 )
 
 func TestCommandList(t *testing.T) {
-	state := &state{
-		Tasks: []Task{
-			{ID: 1, Description: "Task 1", Status: Todo},
-			{ID: 2, Description: "Task 2", Status: InProgress},
-			{ID: 3, Description: "Task 3", Status: Done},
+	c := &CLI{
+		state: &state{
+			Tasks: []Task{
+				{ID: 1, Description: "Task 1", Status: Todo},
+				{ID: 2, Description: "Task 2", Status: InProgress},
+				{ID: 3, Description: "Task 3", Status: Done},
+			},
 		},
 	}
 
@@ -41,7 +43,7 @@ func TestCommandList(t *testing.T) {
 
 			os.Stdout = w
 
-			_ = commandList(state, tt.args)
+			_ = commandList(c, tt.args)
 
 			w.Close()
 
@@ -51,7 +53,7 @@ func TestCommandList(t *testing.T) {
 
 			out := buf.String()
 
-			err := commandList(state, tt.args)
+			err := commandList(c, tt.args)
 
 			if err != tt.wantErr {
 				t.Errorf("expected error %v, got %v", tt.wantErr, err)

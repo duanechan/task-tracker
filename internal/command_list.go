@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-func commandList(state *state, args []string) error {
+func commandList(c *CLI, args []string) error {
 	if len(args) > 1 {
 		return ErrTooManyArgs
 	}
 
 	if len(args) == 0 {
 		fmt.Println("List of all tasks:")
-		state.displayTasks(func(t Task) bool {
+		c.state.displayTasks(func(t Task) bool {
 			return true
 		})
 		return nil
@@ -34,15 +34,15 @@ func commandList(state *state, args []string) error {
 
 	switch status {
 	case "todo":
-		state.displayTasks(func(t Task) bool {
+		c.state.displayTasks(func(t Task) bool {
 			return t.Status == Todo
 		})
 	case "in-progress":
-		state.displayTasks(func(t Task) bool {
+		c.state.displayTasks(func(t Task) bool {
 			return t.Status == InProgress
 		})
 	case "done":
-		state.displayTasks(func(t Task) bool {
+		c.state.displayTasks(func(t Task) bool {
 			return t.Status == Done
 		})
 	}

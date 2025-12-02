@@ -61,22 +61,24 @@ func TestCommandDelete(t *testing.T) {
 		},
 	}
 
-	makeState := func() *state {
-		return &state{
-			NextID: 3,
-			Tasks: []Task{
-				{ID: 1, Description: "Task 1", Status: Todo},
-				{ID: 2, Description: "Task 2", Status: Todo},
-				{ID: 3, Description: "Task 3", Status: Todo},
+	mockCLI := func() *CLI {
+		return &CLI{
+			state: &state{
+				NextID: 3,
+				Tasks: []Task{
+					{ID: 1, Description: "Task 1", Status: Todo},
+					{ID: 2, Description: "Task 2", Status: Todo},
+					{ID: 3, Description: "Task 3", Status: Todo},
+				},
 			},
 		}
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			state := makeState()
+			c := mockCLI()
 
-			err := commandDelete(state, tt.args)
+			err := commandDelete(c, tt.args)
 
 			if tt.wantErr != nil {
 				if tt.wantErr == strconv.ErrSyntax {
@@ -92,12 +94,12 @@ func TestCommandDelete(t *testing.T) {
 			}
 
 			if tt.wantTasks != nil {
-				if len(state.Tasks) != len(tt.wantTasks) {
-					t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(state.Tasks))
+				if len(c.state.Tasks) != len(tt.wantTasks) {
+					t.Fatalf("expected %d tasks, got %d", len(tt.wantTasks), len(c.state.Tasks))
 				}
 
 				for i, want := range tt.wantTasks {
-					actual := state.Tasks[i]
+					actual := c.state.Tasks[i]
 					checkTaskIfEqual(t, want, actual)
 				}
 			}

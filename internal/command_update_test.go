@@ -14,13 +14,15 @@ func TestCommandUpdate(t *testing.T) {
 		os.Remove(path)
 	})
 
-	makeState := func() *state {
-		return &state{
-			NextID: 3,
-			Tasks: []Task{
-				{ID: 1, Description: "Task 1", Status: Todo},
-				{ID: 2, Description: "Task 2", Status: Todo},
-				{ID: 3, Description: "Task 3", Status: Todo},
+	mockCLI := func() *CLI {
+		return &CLI{
+			state:&state{
+				NextID: 3,
+				Tasks: []Task{
+					{ID: 1, Description: "Task 1", Status: Todo},
+					{ID: 2, Description: "Task 2", Status: Todo},
+					{ID: 3, Description: "Task 3", Status: Todo},
+				},
 			},
 		}
 	}
@@ -29,7 +31,7 @@ func TestCommandUpdate(t *testing.T) {
 		name           string
 		args           []string
 		wantErr        error
-		wantDesc       map[int]string // map[taskID]expectedDescription
+		wantDesc       map[int]string
 		checkUpdatedAt bool
 	}{
 		{
@@ -82,10 +84,10 @@ func TestCommandUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			state := makeState()
-			oldUpdatedAt := state.Tasks[1].UpdatedAt
+			c := mockCLI()
+			oldUpdatedAt := c.state.Tasks[1].UpdatedAt
 
-			err := commandUpdate(state, tt.args)
+			err := commandUpdate(c, tt.args)
 
 			if tt.wantErr != nil {
 				if tt.wantErr == strconv.ErrSyntax {
@@ -101,7 +103,7 @@ func TestCommandUpdate(t *testing.T) {
 			}
 
 			if tt.wantDesc != nil {
-				for _, task := range state.Tasks {
+				for _, task := range c.state.Tasks {
 					wantDesc, ok := tt.wantDesc[task.ID]
 					if !ok {
 						continue

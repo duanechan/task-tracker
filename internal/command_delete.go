@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func commandDelete(state *state, args []string) error {
+func commandDelete(c *CLI, args []string) error {
 	if len(args) < 1 {
 		return ErrMissingArg
 	}
@@ -27,7 +27,7 @@ func commandDelete(state *state, args []string) error {
 	}
 
 	deleted := false
-	state.Tasks = slices.DeleteFunc(state.Tasks, func(t Task) bool {
+	c.state.Tasks = slices.DeleteFunc(c.state.Tasks, func(t Task) bool {
 		if t.ID == id {
 			fmt.Printf("Deleted Task: %s\n", t)
 			deleted = true
@@ -40,5 +40,5 @@ func commandDelete(state *state, args []string) error {
 		return ErrTaskNotFound
 	}
 
-	return saveState(state)
+	return saveState(c.state)
 }
