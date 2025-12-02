@@ -23,50 +23,76 @@ func initializeCommands() *commands {
 			name:        "add",
 			description: "Adds a task to the list.",
 			usage:       "add <description>",
-			params:      map[string]string{},
-			callback:    commandAdd,
+			params: map[string]string{
+				"description": "the task description",
+			},
+			callback: commandAdd,
 		},
 		"update": {
 			name:        "update",
 			description: "Updates the task of a given ID with an updated description.",
-			usage:       "update <id> <updated_description>",
-			callback:    commandUpdate,
+			usage:       "update <id> <description>",
+			params: map[string]string{
+				"id":          "the id of the task to be updated",
+				"description": "the updated task description",
+			},
+			callback: commandUpdate,
 		},
 		"delete": {
 			name:        "delete",
 			description: "Deletes a task of a given ID.",
 			usage:       "delete <id>",
-			callback:    commandDelete,
+			params: map[string]string{
+				"id": "the id of the task to be deleted",
+			},
+			callback: commandDelete,
 		},
 		"list": {
 			name:        "list",
 			description: "Lists tasks by status or all.",
-			usage:       "list [done|todo|in-progress]",
-			callback:    commandList,
+			usage:       "list [done|todo|progress]",
+			params: map[string]string{
+				"done":        "(optional) list all done tasks",
+				"todo":        "(optional) list todo done tasks",
+				"in-progress": "(optional) list in-progress done tasks",
+			},
+			callback: commandList,
 		},
 		"mark-in-progress": {
 			name:        "mark-in-progress",
 			description: "Marks the task status of a given ID as 'in-progress'.",
 			usage:       "mark-as-in-progress <id>",
-			callback:    commandMarkInProgress,
+			params: map[string]string{
+				"id": "the id of the task to be marked as in-progress",
+			},
+			callback: commandMarkInProgress,
 		},
 		"mark-done": {
 			name:        "mark-done",
 			description: "Marks the task status of a given ID as 'done'.",
 			usage:       "mark-done <id>",
-			callback:    commandMarkDone,
+			params: map[string]string{
+				"id": "the id of the task to be marked as done",
+			},
+			callback: commandMarkDone,
 		},
 		"help": {
 			name:        "help",
 			description: "Display list of commands",
 			usage:       "help [command]",
-			callback:    commandHelp,
+			params: map[string]string{
+				"command": "(optional) the name of the command in question",
+			},
+			callback: commandHelp,
 		},
 		"version": {
 			name:        "version",
 			description: "Check Task Tracker version",
 			usage:       "version",
-			callback:    commandVersion,
+			params: map[string]string{
+				"": "",
+			},
+			callback: commandVersion,
 		},
 	}
 }
@@ -125,22 +151,23 @@ func (c *CLI) DisplayCommands() {
 	}
 	slices.Sort(keys)
 
-	fmt.Println("Task Tracker", c.version)
-	fmt.Println("Usage: task-cli <command> [<args>]")
+	fmt.Println(Bold+Blue+"Task Tracker"+Reset, Bold+c.version+Reset)
+	fmt.Printf("%sUsage%s: task-cli <command> [<args>]\n", Bold, Reset)
 	fmt.Println()
-	fmt.Println("Available commands:")
+	fmt.Println(Bold + "Available commands:" + Reset)
 	fmt.Println()
 
 	maxLen := 0
 	for _, k := range keys {
-		if len(k) > maxLen {
-			maxLen = len(k)
+		coloredKey := Bold + Blue + k + Reset
+		if len(coloredKey) > maxLen {
+			maxLen = len(coloredKey)
 		}
 	}
 
 	for _, k := range keys {
 		cmd := c.commands[k]
-		fmt.Printf("   %-*s   %s\n", maxLen, cmd.name, cmd.description)
+		fmt.Printf("   %-*s   %s\n", maxLen, Bold+Blue+cmd.name+Reset, cmd.description)
 	}
 
 	fmt.Println()

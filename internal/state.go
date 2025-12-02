@@ -88,19 +88,21 @@ func saveState(state *state) error {
 }
 
 func (s state) displayTasks(pred func(t Task) bool) {
-	sb := strings.Builder{}
+	var sb strings.Builder
 	idx := 1
 
 	for _, t := range s.Tasks {
-		if pred(t) {
-			sb.WriteString(fmt.Sprintf("%d. %s\n", idx, t))
-			idx++
+		if !pred(t) {
+			continue
 		}
+
+		fmt.Fprintf(&sb, "%d. %s\n", idx, t)
+		idx++
 	}
 
-	if sb.String() == "" {
-		sb.WriteString("No tasks to display.")
+	if sb.Len() == 0 {
+		sb.WriteString("No tasks to display.\n")
 	}
 
-	fmt.Println(sb.String())
+	fmt.Print(sb.String())
 }
